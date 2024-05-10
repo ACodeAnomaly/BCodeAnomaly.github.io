@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<div id="score"></div><br>
+<div id="coin"></div>
+<html>
+  <head>
+    <base target="_top">
+  </head>
+  <style>
+     html, body {
+    height: 100%;
+    margin: 0;
+  }
+  #score {
+    font-size: 15px;
+  }
+  #coin {
+    font-size: 15px;
+  }
+
+  body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  canvas {
+    border: 1px solid orange;
+    background: black;
+  }
+  </style>
+  <body>
+  <canvas width="1250" height="600" id="game">  <script>
+    let gameScore = 0;
+    let coinScore = 0;
+document.getElementById("score").innerHTML = "Score: " + gameScore;
+document.getElementById("coin").innerHTML = "Coin: " + coinScore;
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+let num = 5;
+let box = [];
+let coin ={
+  X: 692,
+  Y: 500,
+  Height: 30,
+  Width: 15
+};
+  function renderbox(){
+        ctx.fillStyle = "lime";
+        for(i = 0; i <= levelMax; i++){
+        ctx.fillRect(box[i].X, box[i].Y, box[i].Width, box[i].Height);
+        }
+    }
+//i keeps getting longer so we can have a single function for all boxes
+    function boxCollision(){
+      for(i = 0; i <= levelMax; i++){
+if (
+  player.X + player.Width >= box[i].X &&
+  player.X <= box[i].X + box[i].Width &&
+  player.Y + player.Height >= box[i].Y - 2 &&
+  player.Y <= box[i].Y - 2
+){
+  player.VY = 0;
+  player.Jumping = false;
+  player.Y = box[i].Y - player.Height;
+}
+if (
+  player.X + player.Width >= box[i].X &&
+  player.X <= box[i].X + box[i].Width &&
+  player.Y + player.Height >= box[i].Y + 2 &&
+  player.Y <= box[i].Y
+){
+  player.Moving = false;
+}else{
+        if (keys.left){
+        player.VX = -10;
+      }else{
+      if (keys.right){
+        player.VX = 10;
+      }else{
+        player.VX = 0;
+      }
+      }
+}
+      }
+    }
+let levelMax = 100;
+function level1(){
+  for (i=0; i <= levelMax; i++){
+    if (i>=0 && i<=num){
+       box.push(
+       {
+       X: i*50,
+       Y: 550,
+       Width: 50,
+       Height: 50
+       }
+      );
+    }
+    if (i>=10 && i<= 12){
+       box.push(
+       {
+       X: 200,
+       Y: i*50,
+       Width: 50,
+       Height: 50
+       }
+      ); 
+    }
+  }
+}
+let platforms = {
+Height : 25,
+Width : 150,
+X : 625,
+Y : 550,
+VX : 0,
+OX : 625,
+Moving : true
+};
+function movePlatform() {
+if (platforms.OX <= 625){
+  platforms.VX = 1;
+}
+if (platforms.OX >= 775){
+  platforms.VX = -1;
+}
+platforms.OX += platforms.VX;
+platforms.X += platforms.VX;
+}
+  
+//collision
+function collision(){
+  if (
+  player.X + player.Width >= platforms.X &&
+  player.X <= platforms.X + platforms.Width &&
+  player.Y + player.Height >= platforms.Y &&
+  player.Y <= platforms.Y + platforms.Height
+) {
+  player.VY = 0;
+  player.Jumping = false;
+  player.Y = platforms.Y - player.Height;
+  player.X += platforms.VX;
+} else {
+player.Jumping = true;
+}
+  if (
+  coin.X + coin.Width >= platforms.X &&
+  coin.X <= platforms.X + platforms.Width &&
+  coin.Y + coin.Height + 20 >= platforms.Y &&
+  coin.Y <= platforms.Y + platforms.Height
+) {
+  coin.X += platforms.VX;
+}
+ if (
+  player.X + player.Width >= coin.X &&
+  player.X <= coin.X + coin.Width &&
+  player.Y + player.Height >= coin.Y &&
+  player.Y <= coin.Y + coin.Height
+ ){
+  gameScore = gameScore + 50;
+  coinScore = coinScore + 1;
+  document.getElementById("score").innerHTML = "Score: " + gameScore;
+  document.getElementById("coin").innerHTML = "Coin: " + coinScore;
+      delete coin.X;
+ }
+if (player.Y > 600){
+player.Y = 0;
+}
+if (player.VY > 50){
+  player.VY = 50;
+}
+}
+
+function renderPlatform(){
+ctx.fillStyle = "#45597E";
+ctx.fillRect(platforms.X, platforms.Y, platforms.Width, platforms.Height);
+}
+function renderPlayer(){
+ctx.fillStyle = "White";
+ctx.fillRect(player.X, player.Y, player.Width, player.Height);
+}
+let gravity = 1.2;
+let drag = 1.5;
+let player = {
+  X : 0,
+  Y : 500,
+  VY : 0,
+  VX : 0,
+  Jumping : false,
+  Moving : false,
+  Width : 50,
+  Height : 50
+};
+let camera ={
+  X : 0,
+  Y : 0
+};
+function moveCamera(){
+  if (player.X < box[0].X){
+    player.X = 0;
+  }
+  if (player.X < 0){
+    camera.X = 10;
+    player.X += camera.X;
+    platforms.X += camera.X;
+for(i = 0; i <= levelMax; i++){
+    box[i].X += camera.X;
+}
+coin.X += camera.X;
+  }
+  if (player.X > 1200){
+    camera.X = -10;
+    player.X += camera.X;
+    platforms.X += camera.X;
+for(i = 0; i <= levelMax; i++){
+    box[i].X += camera.X;
+}
+coin.X += camera.X;
+}
+}
+//controls
+//arrow keys
+    let keys = {
+        right: false,
+        left: false,
+        up: false,
+        };
+//button inputs
+        function keydown(e) {
+        // 37 is the code for thr left arrow key
+        if(e.keyCode == 37) {
+            keys.left = true;
+        }
+        // 39 is the code for the right arrow key
+        if(e.keyCode == 39) {
+            keys.right = true;
+        }
+        //up key
+        if(e.keyCode == 38) {
+          keys.up = true;
+        }
+    }
+        function keyup(e) {
+        if(e.keyCode == 37) {
+            keys.left = false;
+        }
+        if(e.keyCode == 39) {
+            keys.right = false;
+        }
+        if(e.keyCode == 38){
+          keys.up = false;
+        }
+    } 
+    function loop(){
+      if (keys.left){
+        player.Moving = true;
+      }else{
+      if (keys.right){
+        player.Moving = true;
+      }else{
+        player.Moving = false;
+      }
+      }
+      if (keys.up){
+if(player.Jumping == false) {
+player.VY = -20;
+player.Jumping = true;
+}
+}
+player.X += player.VX;
+//jump
+          if (player.Jumping == true){
+player.Y += player.VY;
+player.VY += gravity;
+  }
+collision();
+level1();
+ctx.clearRect(0,0,canvas.width,canvas.height);
+renderPlayer();
+renderPlatform();
+ctx.fillStyle = "#FFCF40";
+ctx.fillRect(coin.X, coin.Y, coin.Width, coin.Height);
+renderbox();
+boxCollision();
+moveCamera();
+movePlatform();
+    }
+    document.addEventListener("keydown",keydown);
+    document.addEventListener("keyup",keyup);
+    setInterval(loop, 22);
+    requestAnimationFrame(loop);
+  </script></canvas>
+    
+  </body>
+</html>
